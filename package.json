@@ -23,5 +23,6 @@
     "env": {
       "PORT": 3000
     }
-  }
+  },
+  "type": "module"
 }
