@@ -1,31 +1,21 @@
 import express from "express";
+import debug from "debug";
+import morgan from "morgan";
+import bodyParser from "body-parser";
+import productsRouter from "./src/router/productRouter.js";
+
 const app = express();
-const port = 3000;
+const PORT = process.env.PORT;
+
+app.use(morgan("combined"));
+app.use(bodyParser.json());
 
 app.get("/", (req, res) => {
-  res.send("Hello World!");
+  res.send("Welcome to Product management system");
 });
 
-// GET request
-app.get("/products", (req, res) => {
-  res.send("List of products");
-});
+app.use("/products", productsRouter);
 
-// POST request
-app.post("/products", (req, res) => {
-  res.send("Add a new product");
-});
-
-// PUT request
-app.put("/products/:id", (req, res) => {
-  res.send(`Update product with ID: ${req.params.id}`);
-});
-
-// DELETE request
-app.delete("/products/:id", (req, res) => {
-  res.send(`Delete product with ID: ${req.params.id}`);
-});
-
-app.listen(port, () => {
-  console.log(`Server running at <http://localhost>:${port}/`);
+app.listen(PORT, () => {
+  debug(`Server running at <http://localhost:${PORT}>`);
 });
