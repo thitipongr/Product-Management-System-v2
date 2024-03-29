@@ -1,5 +1,7 @@
 import express from "express";
+
 let products = [];
+let lastestId;
 
 const productsRouter = express.Router();
 
@@ -13,13 +15,17 @@ productsRouter.route("/").post((req, res) => {
   )
     return res.send("invalid body").status(204);
 
+  lastestId = lastestId ? lastestId : 0;
+
   const newProduct = {
-    id: Number(products.length ? products.at(-1).id : 0) + 1,
+    id: lastestId + 1,
     name: String(req.body.name),
     category: String(req.body.category),
     price: Number(req.body.price),
     stock: Number(req.body.stock),
   };
+  lastestId = newProduct.id;
+
   products.push(newProduct);
   res.json(newProduct);
 });
