@@ -5,12 +5,20 @@ const productsRouter = express.Router();
 
 // POST request
 productsRouter.route("/").post((req, res) => {
+  if (
+    !req.body.name ||
+    !req.body.price ||
+    isNaN(req.body.price) ||
+    isNaN(req.body.stock)
+  )
+    return res.send("invalid body").status(204);
+
   const newProduct = {
     id: Number(products.length ? products.at(-1).id : 0) + 1,
-    name: req.body.name,
-    category: req.body.category,
-    price: req.body.price,
-    stock: req.body.stock,
+    name: String(req.body.name),
+    category: String(req.body.category),
+    price: Number(req.body.price),
+    stock: Number(req.body.stock),
   };
   products.push(newProduct);
   res.json(newProduct);
@@ -34,10 +42,18 @@ productsRouter.route("/:id").put((req, res) => {
   const product = products.find((p) => p.id === parseInt(req.params.id));
   if (!product) return res.status(404).send("Product not found.");
 
-  product.name = req.body.name;
-  product.category = req.body.category;
-  product.price = req.body.price;
-  product.stock = req.body.stock;
+  if (
+    !req.body.name ||
+    !req.body.price ||
+    isNaN(req.body.price) ||
+    isNaN(req.body.stock)
+  )
+    return res.send("invalid body").status(204);
+
+  product.name = String(req.body.name);
+  product.category = String(req.body.category);
+  product.price = Number(req.body.price);
+  product.stock = Number(req.body.stock);
 
   res.json(product);
 });
