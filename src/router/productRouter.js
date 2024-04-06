@@ -1,11 +1,32 @@
 import express from "express";
-
-let products = [];
-let lastestId;
+import mysql from "mysql";
+import db_config from "./../../db_config.json" with { type: "json" };
 
 const productsRouter = express.Router();
 
 export default productsRouter;
+
+const con = mysql.createConnection({
+  host: db_config.host,
+  port: db_config.port,
+  user: db_config.user,
+  password: db_config.password,
+  database: db_config.database,
+});
+
+con.connect(function (err) {
+  if (err) throw err;
+  console.log("Database Connected!");
+});
+
+let products = [];
+let lastestId
+
+const getLastId_sql = "SELECT id FROM products ORDER BY id DESC LIMIT 1";
+con.query(getLastId_sql, function (err, result) {
+  if (err) throw err;
+  lastestId = result[0].id
+});
 
 // POST request
 productsRouter.route("/").post((req, res) => {
@@ -28,9 +49,18 @@ productsRouter.route("/").post((req, res) => {
     price: Number(req.body.price),
     stock: Number(req.body.stock),
   };
-  lastestId = newProduct.id;
 
-  products.push(newProduct);
+  const insertNewProduct_sql = `INSERT INTO products (name, category, price, stock) VALUES ("${newProduct.name}", "${newProduct.category}",${newProduct.price},${newProduct.stock})`
+
+  con.query(insertNewProduct_sql, function (err, result) {
+    if (err) throw res.send(err).status(204);
+  });
+
+  con.query(getLastId_sql, function (err, result) {
+    if (err) throw err;
+    lastestId = result[0].id
+  });
+
   res.json(newProduct); // ทำการส่ง Response กลับไป เมื่อจบการทำงาน
 });
 
