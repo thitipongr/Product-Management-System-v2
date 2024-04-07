@@ -13,7 +13,7 @@ const con = mysql.createConnection({
   database: db_config.database,
 });
 
-con.connect(function (err) {
+con.connect((err) => {
   if (err) throw err;
   console.log("Database Connected!");
 });
@@ -22,7 +22,7 @@ let products = [];
 let lastestId;
 
 const getLastId_sql = "SELECT id FROM products ORDER BY id DESC LIMIT 1";
-con.query(getLastId_sql, function (err, result) {
+con.query(getLastId_sql, (err, result) => {
   if (err) throw err;
   lastestId = result[0]?.id ? result[0].id : 0;
 });
@@ -49,11 +49,11 @@ productsRouter.route("/").post((req, res) => {
 
   const insertNewProduct_sql = `INSERT INTO products (id, name, category, price, stock) VALUES (${newProduct.id}, "${newProduct.name}", "${newProduct.category}",${newProduct.price},${newProduct.stock})`;
 
-  con.query(insertNewProduct_sql, function (err, result) {
+  con.query(insertNewProduct_sql, (err, result) => {
     if (err) throw res.send(err).status(204);
   });
 
-  con.query(getLastId_sql, function (err, result) {
+  con.query(getLastId_sql, (err, result) => {
     if (err) throw err;
     lastestId = result[0].id;
   });
@@ -78,10 +78,20 @@ productsRouter.route("").get((req, res) => {
 });
 
 productsRouter.route("/:id").get((req, res) => {
-  // มีการรับ Params ชื่อ id เข้ามาด้วย
-  const product = products.find((p) => p.id === parseInt(req.params.id)); // และนำมาเช็คว่า มีข้อมูลนั้น ๆ ไหม
-  if (!product) return res.status(404).send("Product not found."); // ถ้าไม่มี ก็ส่งข้อความ "Product not found." กลับ พร้อม status 404
-  res.json(product); // หรือหากมีอยู่ ก็ให้แสดงออกไปทั้งหมด
+  const { id } = req.params;
+  const fineById = `SELECT * FROM products WHERE id = ${id}`;
+  con.query(fineById, (err, result) => {
+    if (err) throw err;
+
+    if (result.length === 0) return res.send("Product not found.").status(204);
+
+    res.json(result);
+  });
+
+  // // มีการรับ Params ชื่อ id เข้ามาด้วย
+  // const product = products.find((p) => p.id === parseInt(req.params.id)); // และนำมาเช็คว่า มีข้อมูลนั้น ๆ ไหม
+  // if (!product) return res.status(404).send("Product not found."); // ถ้าไม่มี ก็ส่งข้อความ "Product not found." กลับ พร้อม status 404
+  // res.json(product); // หรือหากมีอยู่ ก็ให้แสดงออกไปทั้งหมด
 });
 
 // PUT request
