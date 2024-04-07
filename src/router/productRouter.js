@@ -87,35 +87,37 @@ productsRouter.route("/:id").get((req, res) => {
 
     res.json(result);
   });
-
-  // // มีการรับ Params ชื่อ id เข้ามาด้วย
-  // const product = products.find((p) => p.id === parseInt(req.params.id)); // และนำมาเช็คว่า มีข้อมูลนั้น ๆ ไหม
-  // if (!product) return res.status(404).send("Product not found."); // ถ้าไม่มี ก็ส่งข้อความ "Product not found." กลับ พร้อม status 404
-  // res.json(product); // หรือหากมีอยู่ ก็ให้แสดงออกไปทั้งหมด
 });
 
 // PUT request
 productsRouter.route("/:id").put((req, res) => {
-  // มีการรับ Params ชื่อ id เข้ามาด้วย
-  const product = products.find((p) => p.id === parseInt(req.params.id)); // และนำมาเช็คว่า มีข้อมูลนั้น ๆ ไหม
-  if (!product) return res.status(404).send("Product not found."); // ถ้าไม่มี ก็ส่งข้อความ "Product not found." กลับ พร้อม status 404
+  const { id } = req.params;
+  const fineById = `SELECT * FROM products WHERE id = ${id}`;
+  con.query(fineById, (err, findIdResult) => {
+    if (err) throw err;
 
-  if (
-    !req.body.name ||
-    !req.body.price ||
-    isNaN(req.body.price) ||
-    isNaN(req.body.stock)
-  )
-    // if นี้ สำหรับป้องกันไม่ให้ค่าที่จำเป็นถูกบันทึกเป็นค่าว่าง และส่วนที่เป็นตัวเลข ก็ต้องเป็นตัวเลขอย่างถูกต้อง
-    return res.send("invalid body").status(204); // หากไม่เป็นไปตามกำหนด จะส่งข้อความว่า "invalid body" พร้อม status 204
+    if (findIdResult.length === 0)
+      return res.send("Product not found.").status(204);
 
-  product.name = String(req.body.name);
-  product.category = String(req.body.category);
-  product.price = Number(req.body.price);
-  product.stock = Number(req.body.stock);
-  // กำหนดค่าต่าง ๆ เป็นค่าใหม่
+    const oldData = findIdResult[0];
 
-  res.json(product); // ทำการส่ง Response กลับไป เมื่อจบการทำงาน
+    const packData = `name = "${req.body.name || oldData.name}", category = "${
+      req.body.category || oldData.category
+    }", price = ${req.body.price || oldData.price}, stock = ${
+      req.body.stock || oldData.stock
+    }`;
+
+    const updateProduct_sql = `UPDATE products SET ${packData} WHERE id = "${oldData.id}"`;
+    con.query(updateProduct_sql, (err) => {
+      if (err) throw err;
+      res.json({
+        name: req.body.name || oldData.name,
+        category: req.body.category || oldData.category,
+        price: req.body.price || oldData.price,
+        stock: req.body.stock || oldData.stock,
+      });
+    });
+  });
 });
 
 // DELETE request
