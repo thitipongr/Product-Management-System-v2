@@ -122,12 +122,19 @@ productsRouter.route("/:id").put((req, res) => {
 
 // DELETE request
 productsRouter.route("/:id").delete((req, res) => {
-  // มีการรับ Params ชื่อ id เข้ามาด้วยเช่นเคย
-  const productIndex = products.findIndex(
-    (p) => p.id === parseInt(req.params.id)
-  ); // และนำมาหา index ของข้อมูลนั้น ๆ
-  if (productIndex === -1) return res.status(404).send("Product not found."); // ถ้าไม่มี ก็ส่งข้อความ "Product not found." กลับ พร้อม status 404
+  const { id } = req.params;
+  const fineById = `SELECT * FROM products WHERE id = ${id}`;
+  con.query(fineById, (err, findIdResult) => {
+    if (err) throw err;
 
-  const deletedProduct = products.splice(productIndex, 1); // หากพบ ก็จะทำการ splice ข้อมูลนั้น ๆ ออกไปจากระบบ
-  res.json(deletedProduct); // ทำการส่ง Response กลับไป เมื่อจบการทำงาน
+    if (findIdResult.length === 0)
+      return res.send("Product not found.").status(204);
+
+    const deletedProduct = findIdResult[0];
+    const deleteProduct_sql = `DELETE FROM products WHERE id = ${id}`;
+    con.query(deleteProduct_sql, (err) => {
+      if (err) throw err;
+      res.json(deletedProduct);
+    });
+  });
 });
