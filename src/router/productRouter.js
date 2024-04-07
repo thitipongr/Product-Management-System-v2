@@ -25,7 +25,7 @@ let lastestId
 const getLastId_sql = "SELECT id FROM products ORDER BY id DESC LIMIT 1";
 con.query(getLastId_sql, function (err, result) {
   if (err) throw err;
-  lastestId = result[0].id
+  lastestId = result[0]?.id ? result[0].id : 0
 });
 
 // POST request
@@ -39,8 +39,6 @@ productsRouter.route("/").post((req, res) => {
     // if นี้ สำหรับป้องกันไม่ให้ค่าที่จำเป็นถูกบันทึกเป็นค่าว่าง และส่วนที่เป็นตัวเลข ก็ต้องเป็นตัวเลขอย่างถูกต้อง
     return res.send("invalid body").status(204); // หากไม่เป็นไปตามกำหนด จะส่งข้อความว่า "invalid body" พร้อม status 204
 
-  lastestId = lastestId ? lastestId : 0; // เช็คว่าเคยมีข้อมูลในระบบหรือไม่ ก่อนนำไปรวมเป็นก้อนใหม่
-
   // นำข้อมูลมารวมเป็นก้อนใหม่ ก่อนนำไปเก็บไว้ที่ตัวแปร product
   const newProduct = {
     id: lastestId + 1,
@@ -50,7 +48,7 @@ productsRouter.route("/").post((req, res) => {
     stock: Number(req.body.stock),
   };
 
-  const insertNewProduct_sql = `INSERT INTO products (name, category, price, stock) VALUES ("${newProduct.name}", "${newProduct.category}",${newProduct.price},${newProduct.stock})`
+  const insertNewProduct_sql = `INSERT INTO products (id, name, category, price, stock) VALUES (${newProduct.id}, "${newProduct.name}", "${newProduct.category}",${newProduct.price},${newProduct.stock})`
 
   con.query(insertNewProduct_sql, function (err, result) {
     if (err) throw res.send(err).status(204);
