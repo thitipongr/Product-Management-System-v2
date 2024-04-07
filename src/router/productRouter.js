@@ -1,7 +1,6 @@
 import express from "express";
 import mysql from "mysql";
-import db_config from "./../../db_config.json" with { type: "json" };
-
+import db_config from "./../../db_config.json" assert { type: "json" };
 const productsRouter = express.Router();
 
 export default productsRouter;
@@ -20,12 +19,12 @@ con.connect(function (err) {
 });
 
 let products = [];
-let lastestId
+let lastestId;
 
 const getLastId_sql = "SELECT id FROM products ORDER BY id DESC LIMIT 1";
 con.query(getLastId_sql, function (err, result) {
   if (err) throw err;
-  lastestId = result[0]?.id ? result[0].id : 0
+  lastestId = result[0]?.id ? result[0].id : 0;
 });
 
 // POST request
@@ -48,7 +47,7 @@ productsRouter.route("/").post((req, res) => {
     stock: Number(req.body.stock),
   };
 
-  const insertNewProduct_sql = `INSERT INTO products (id, name, category, price, stock) VALUES (${newProduct.id}, "${newProduct.name}", "${newProduct.category}",${newProduct.price},${newProduct.stock})`
+  const insertNewProduct_sql = `INSERT INTO products (id, name, category, price, stock) VALUES (${newProduct.id}, "${newProduct.name}", "${newProduct.category}",${newProduct.price},${newProduct.stock})`;
 
   con.query(insertNewProduct_sql, function (err, result) {
     if (err) throw res.send(err).status(204);
@@ -56,17 +55,26 @@ productsRouter.route("/").post((req, res) => {
 
   con.query(getLastId_sql, function (err, result) {
     if (err) throw err;
-    lastestId = result[0].id
+    lastestId = result[0].id;
   });
 
   res.json(newProduct); // ทำการส่ง Response กลับไป เมื่อจบการทำงาน
 });
 
 // GET request
-productsRouter.route("/").get((req, res) => {
-  if (products.length === 0)
-    return res.status(404).send("There are no products yet."); // เช็คว่า มีข้อมูลในระบบหรือไม่ ถ้าไม่ก็ส่งข้อความ "There are no products yet." กลับ พร้อม status 404
-  res.json(products); // หรือหากมีอยู่ ก็ให้แสดงออกไปทั้งหมด
+productsRouter.route("").get((req, res) => {
+  const { page = 1, limit = 10 } = req.query;
+  const findWithPage_sql = `SELECT * FROM products LIMIT ${limit} OFFSET ${
+    page * limit - limit
+  }`;
+  con.query(findWithPage_sql, (err, result) => {
+    if (err) throw err;
+
+    if (result.length === 0)
+      return res.send("There are no products here.").status(204);
+
+    res.json(result);
+  });
 });
 
 productsRouter.route("/:id").get((req, res) => {
