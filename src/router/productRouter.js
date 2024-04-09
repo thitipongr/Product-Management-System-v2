@@ -1,6 +1,7 @@
 import express from "express";
 import mysql from "mysql";
 import db_config from "./../../db_config.json" assert { type: "json" };
+
 const productsRouter = express.Router();
 
 export default productsRouter;
